@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Links:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey: {Name: code, Type: String}
+  Shortener:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: app.handler
+      Runtime: python3.12
+      Environment:
+        Variables: {TABLE: !Ref Links}
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref Links}
+      Events:
+        Create: {Type: HttpApi, Properties: {Path: /links, Method: post}}
+        Go: {Type: HttpApi, Properties: {Path: '/{code}', Method: get}}
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com
